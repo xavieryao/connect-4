@@ -7,6 +7,7 @@
 //
 
 #include "UCTStrategy.h"
+#include <iostream>
 
 UCTStrategy::UCTStrategy(int m, int n, int noX, int noY) {
     this->M = m;
@@ -28,23 +29,34 @@ Point UCTStrategy::getPoint(const int* top, int** board,
 }
 
 Point UCTStrategy::uctSearch(int** s0, int lastX, int lastY) {
+    printf("uctSearch Started\n");
     Time startTime = std::chrono::system_clock::now();
-    Node* v0 = new Node(nullptr, s0, false, Point(lastX, lastY));
-    v0->availableActions = actions(s0);
     
-    while (!hasTimeout(startTime)) {
+    Node* v0 = new Node(nullptr, s0, true, Point(lastX, lastY));
+    v0->availableActions = actions(v0->state, true);
+    
+    
+    int i = 0;
+    
+    while (i <= 100) {
+        printf("uctSearch iteration\n");
         Node* vl = treePolicy(v0);
-        ul delta = defaultPolicy(vl);
+        int delta = defaultPolicy(vl);
         backup(vl, delta);
+        i ++;
     }
     return bestChild(v0, 0)->action;
 }
 
 Node* UCTStrategy::treePolicy(Node* v) {
+    printf("tree policy\n");
     while (!isNodeTerminal(v)) { // while节点v不是终止节点
+        printf("tree policy iteration\n");
         if (v->availableActions.size() > 0) { // if 节点v是可扩展的
+            printf("v 可扩展\n");
             return expand(v);
         } else {
+            printf("v 不可扩展\n");
             v = bestChild(v, coefficient);
         }
     }
@@ -52,38 +64,59 @@ Node* UCTStrategy::treePolicy(Node* v) {
 }
 
 Node* UCTStrategy::expand(Node* v) {
+    printf("扩展\n");
+    assert(v->availableActions.size() > 0);
     auto action = v->availableActions.back();
     v->availableActions.pop_back(); // 选择尚未选择过的行动
-    auto newState = performAction(v->state, action);
+    auto newState = performAction(v->state, action, (v->mySide ? 2 : 1));
     Node* vv = new Node(v, newState, !v->mySide, action); // 添加节点
-    v->childern.push_back(vv);
+    vv->availableActions = actions(vv->state, vv->mySide);
+    
+    v->children.push_back(vv);
+    printf("给v增加儿子\n");
+    printf("儿子的action %d,%d\n", action.x, action.y);
     return vv;
 }
 
 Node* UCTStrategy::bestChild(Node* v, double c) {
+    printf("bestChild\n");
+    assert(v->children.size() > 0);
+    
     Node* candid = nullptr;
     double max_confidnece = LONG_MIN;
-    for (auto child : v->childern) {
-        double confidence = child->reward/child->visited + c*sqrt(2*log(v->visited)/child->visited);
+    for (int i = 0; i < v->children.size(); i++) {
+        Node* child = v->children[i];
+        printf("遍历儿子 %d, %d\n", child->action.x, child->action.y);
+        printf("child->reward %d\n",child->reward);
+        double a = static_cast<double>(child->reward)/child->visited;
+        double b = 2*log(v->visited)/child->visited;
+        double confidence = a + c*sqrt(b);
+        printf("a: %f, b:%f, confidence %f, coefficient %f\n", a, b, confidence, c);
         if (confidence > max_confidnece) {
             max_confidnece = confidence;
+            candid = child;
         }
-        candid = child;
     }
+    printf("best儿子的action %d,%d\n", candid->action.x, candid->action.y);
     return candid;
 }
 
-ul UCTStrategy::defaultPolicy(Node* v) {
-    Node* vv = v;
+int UCTStrategy::defaultPolicy(Node* v) {
+    printf("defaultPolicy\n");
+    Node* vv = new Node(nullptr, v->state, v->mySide, v->action);
     UCTStrategy::GameState gs = PLAYING;
     while (gs == PLAYING) {
-        std::vector<Point> availableActions = actions(vv->state);
+        std::vector<Point> availableActions = actions(vv->state, vv->mySide);
         int idx = rand()%availableActions.size();
+        //        printf("idx %d, size%d \n", idx, availableActions.size());
         vv->action = availableActions[idx];
-        vv->state = performAction(vv->state, vv->action);
+        vv->state = performAction(vv->state, vv->action, (vv->mySide ? 2 : 1));
         vv->mySide = !vv->mySide;
+        gs = getGameState(vv);
+        
     }
-    
+    printf("gs: %d\n", gs);
+    assert(gs != PLAYING);
     int reward = 0;
     switch (gs) {
         case COMPUTER_WIN:
@@ -97,7 +130,8 @@ ul UCTStrategy::defaultPolicy(Node* v) {
     return reward;
 }
 
-void UCTStrategy::backup(Node* v, ul delta) {
+void UCTStrategy::backup(Node* v, int delta) {
+    printf("backup %d\n", delta);
     while (v != nullptr) {
         v->visited += 1;
         v->reward += delta;
@@ -108,27 +142,31 @@ void UCTStrategy::backup(Node* v, ul delta) {
 
 bool UCTStrategy::hasTimeout(Time& start) {
     Time now = std::chrono::system_clock::now();
-    bool result = (std::chrono::microseconds(now - start).count() > timeout);
+    bool result = (std::chrono::duration_cast<std::chrono::microseconds>(now - start).count() > timeout);
+    //if(result) printf("timeout!\n");
     return result;
 }
 
 bool UCTStrategy::isNodeTerminal(Node* v) {
-    return getGameState(v) != PLAYING;
+    GameState state = getGameState(v);
+    printf("is node terminal? %d\n", state);
+    return state != PLAYING;
 }
 
-std::vector<Point> UCTStrategy::actions(int** s) {
+std::vector<Point> UCTStrategy::actions(int** s, bool block) {
     std::vector<Point> acts;
     for (int y = 0; y < N; y++) {
         Point p;
         p.y = y;
+        p.x = M-1;
         for (int x = 0; x < M; x++) {
             if (s[x][y] != 0) {
                 p.x = x-1;
                 break;
             }
         }
-        if (p.y == noY && p.x == noX) {
-            p.x -= 1;
+        if (p.y == noY && p.x == noX && block) {
+            continue;
         }
         if (p.x >= 0 && p.x < M && p.y >= 0 & p.y < N) {
             acts.push_back(p);
@@ -137,27 +175,33 @@ std::vector<Point> UCTStrategy::actions(int** s) {
     return acts;
 }
 
-int** UCTStrategy::performAction(int** s0, Point action) {
+int** UCTStrategy::performAction(int** s0, Point action, int pawn) {
+    assert(s0[action.x][action.y] == 0);
+    assert(!(noX == action.x && noY == action.y && pawn==2) );
     int** board = new int*[M];
     for(int i = 0; i < M; i++) {
         board[i] = new int[N];
         std::memcpy(board[i], s0[i], N*sizeof(int));
     }
+    board[action.x][action.y] = pawn;
     return board;
 }
 
 UCTStrategy::GameState UCTStrategy::getGameState(Node* v) {
-    if(v->mySide && machineWin(v->action.x, v->action.y, M, N, v->state))
-        return COMPUTER_WIN;
-    if (!v->mySide && userWin(v->action.x, v->action.y, M, N, v->state))
+    if (v->action.x == -1) return PLAYING;
+    
+    if(!v->mySide && machineWin(v->action.x, v->action.y, M, N, v->state))
+        return  COMPUTER_WIN;
+    if (v->mySide && userWin(v->action.x, v->action.y, M, N, v->state))
         return USER_WIN;
     
     bool tie = true;
     for (int i = 0; i < N; i++) {
-        if (v->state[0][i] == 0 && i != noY && 0 != noX) {
+        if (v->state[0][i] == 0 && !(i == noY && 0 == noX)) {
             tie = false;
         }
     }
+    if (tie) return TIE;
     
-    return tie ? TIE : PLAYING;
+    return PLAYING;
 }

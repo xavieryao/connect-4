@@ -16,17 +16,18 @@
 #include <vector>
 #include <bitset>
 #include <chrono>
+#include <cstdio>
+#include <cassert>
 
 typedef int ptr;
-typedef unsigned long ul;
 typedef std::chrono::time_point<std::chrono::system_clock> Time;
 
 struct Node {
     Node* parent;
-    std::vector<Node*> childern;
+    std::vector<Node*> children;
     int** state;
     int reward;
-    ul visited;
+    int visited;
     Point action;
     bool mySide;
     std::vector<Point> availableActions;
@@ -34,7 +35,7 @@ struct Node {
     Node(Node* parent, int** state, bool mySide = true, Point action = Point()) {
         this->parent = parent;
         this->state = state;
-        this->reward = -1000;
+        this->reward = -1;
         this->visited = 1;
         this->mySide = mySide;
         this->action = action;
@@ -51,8 +52,8 @@ private:
     int noY;
     
     const int* top;
-    int timeout = 3000;
-    int coefficient = 0.8;
+    int timeout = 150000;
+    double coefficient = 3.8;
     
     enum GameState {
         COMPUTER_WIN, USER_WIN, TIE, PLAYING
@@ -63,7 +64,7 @@ public:
     UCTStrategy() : M(0), N(0), noX(-1), noY(-1) {};
     
     Point getPoint(const int* top, int** board,
-                    const int lastX, const int lastY);
+                   const int lastX, const int lastY);
     
     bool valid() const;
     
@@ -72,12 +73,12 @@ private:
     Node* treePolicy(Node* v);
     Node* expand(Node* v);
     Node* bestChild(Node* v, double c);
-    ul defaultPolicy(Node* v);
-    void backup(Node* v, ul delta);
+    int defaultPolicy(Node* v);
+    void backup(Node* v, int delta);
     bool hasTimeout(Time& start);
     bool isNodeTerminal(Node* v);
-    std::vector<Point> actions(int** s);
-    int** performAction(int** s0, Point action);
+    std::vector<Point> actions(int** s, bool block);
+    int** performAction(int** s0, Point action, int pawn);
     GameState getGameState(Node* v);
 };
 
