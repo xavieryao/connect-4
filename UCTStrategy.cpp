@@ -31,7 +31,15 @@ Point UCTStrategy::getPoint(const int* top, int** board,
 }
 
 Point UCTStrategy::uctSearch(int** s0) {
-    return Point(0,0);
+    Time startTime = std::chrono::system_clock::now();
+    Node* v0 = new Node(nullptr, s0);
+    
+    while (!hasTimeout(startTime)) {
+        Node* vl = treePolicy(v0);
+        ul delta = defaultPolicy(vl->state);
+        backup(vl, delta);
+    }
+    return bestChild(v0, 0)->p;
 }
 
 Node* UCTStrategy::treePolicy(Node* v) {
@@ -46,9 +54,15 @@ Node* UCTStrategy::bestChild(Node* v, double c) {
     return nullptr;
 }
 
-ul UCTStrategy::defalutPolicy(int** s) {
+ul UCTStrategy::defaultPolicy(int** s) {
     return 0;
 }
 void UCTStrategy::backup(Node* v, ul delta) {
     return;
+}
+
+bool UCTStrategy::hasTimeout(Time& start) {
+    Time now = std::chrono::system_clock::now();
+    bool result = (std::chrono::microseconds(now - start).count() > timeout);
+    return result;
 }

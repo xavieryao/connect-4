@@ -14,9 +14,11 @@
 #include <ctime>
 #include <vector>
 #include <bitset>
+#include <chrono>
 
 typedef int ptr;
 typedef unsigned long ul;
+typedef std::chrono::time_point<std::chrono::system_clock> Time;
 
 struct Node {
     Node* parent;
@@ -42,6 +44,8 @@ private:
     int noX;
     int noY;
     
+    int timeout = 3000;
+    
 public:
     UCTStrategy(int m, int n, int noX, int noY);
     UCTStrategy() : M(0), N(0), noX(-1), noY(-1) {};
@@ -56,8 +60,9 @@ private:
     Node* treePolicy(Node* v);
     Node* expand(Node* v);
     Node* bestChild(Node* v, double c);
-    ul defalutPolicy(int** s);
+    ul defaultPolicy(int** s);
     void backup(Node* v, ul delta);
+    bool hasTimeout(Time& start);
 };
 
 #endif /* UCTStrategy_h */
