@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2D62E24B1EA34606002E941A /* UCTStrategy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D62E24A1EA34606002E941A /* UCTStrategy.cpp */; };
 		75F348311AB185E20067F028 /* Judge.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 75F348301AB185E20067F028 /* Judge.cpp */; };
 		75F348361AB186440067F028 /* Judge.h in Headers */ = {isa = PBXBuildFile; fileRef = 75F348321AB186440067F028 /* Judge.h */; };
 		75F348371AB186440067F028 /* Point.h in Headers */ = {isa = PBXBuildFile; fileRef = 75F348331AB186440067F028 /* Point.h */; };
@@ -16,8 +15,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		2D62E2491EA34407002E941A /* UCTStrategy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UCTStrategy.h; sourceTree = "<group>"; };
-		2D62E24A1EA34606002E941A /* UCTStrategy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UCTStrategy.cpp; sourceTree = "<group>"; };
 		751BF40F1AB094550075BFA1 /* libStrategy.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libStrategy.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		75F348301AB185E20067F028 /* Judge.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Judge.cpp; sourceTree = "<group>"; };
 		75F348321AB186440067F028 /* Judge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Judge.h; sourceTree = "<group>"; };
@@ -40,8 +37,6 @@
 		751BF4041AB094550075BFA1 = {
 			isa = PBXGroup;
 			children = (
-				2D62E24A1EA34606002E941A /* UCTStrategy.cpp */,
-				2D62E2491EA34407002E941A /* UCTStrategy.h */,
 				75F348321AB186440067F028 /* Judge.h */,
 				75F348331AB186440067F028 /* Point.h */,
 				75F348341AB186440067F028 /* Strategy.cpp */,
@@ -123,7 +118,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2D62E24B1EA34606002E941A /* UCTStrategy.cpp in Sources */,
 				75F348311AB185E20067F028 /* Judge.cpp in Sources */,
 				75F348381AB186440067F028 /* Strategy.cpp in Sources */,
 			);
