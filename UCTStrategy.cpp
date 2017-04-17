@@ -99,10 +99,13 @@ Node* UCTStrategy::bestChild(Node* v, double c) {
         Node* child = v->children[i];
         //        printf("遍历儿子 %d, %d\n", child->action.x, child->action.y);
         double a = static_cast<double>(child->reward)/child->visited;
+        
+//        a = (v->mySide) ? a : -a;
+        
         double b = 2*log(v->visited)/child->visited;
         double confidence = a + c*sqrt(b);
         //        printf("a: %f, b:%f, confidence %f, coefficient %f\n", a, b, confidence, c);
-        if (confidence > max_confidnece) {
+        if (confidence > max_confidnece || ( confidence==max_confidnece && rand()%2)) {
             max_confidnece = confidence;
             candid = child;
         }
