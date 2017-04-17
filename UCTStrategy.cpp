@@ -58,14 +58,10 @@ Point UCTStrategy::uctSearch(int** s0, int lastX, int lastY) {
 }
 
 Node* UCTStrategy::treePolicy(Node* v) {
-    //    printf("tree policy\n");
     while (!isNodeTerminal(v)) { // while节点v不是终止节点
-        //        printf("tree policy iteration\n");
         if (v->availableActions.size() > 0) { // if 节点v是可扩展的
-            //            printf("v 可扩展\n");
             return expand(v);
         } else {
-            //            printf("v 不可扩展\n");
             v = bestChild(v, coefficient);
         }
     }
@@ -73,44 +69,40 @@ Node* UCTStrategy::treePolicy(Node* v) {
 }
 
 Node* UCTStrategy::expand(Node* v) {
-    //    printf("扩展\n");
     assert(v->availableActions.size() > 0);
+    
     int idx = rand()%v->availableActions.size();
     auto action = v->availableActions[idx];
     v->availableActions[idx] = v->availableActions.back();
-    v->availableActions.pop_back(); // 选择尚未选择过的行动
+    v->availableActions.pop_back(); // 随机选择尚未选择过的行动
+    
     auto newState = performAction(v->state, action, (v->mySide ? 2 : 1));
     Node* vv = new Node(v, newState, !v->mySide, action); // 添加节点
     vv->availableActions = actions(vv->state);
     
     v->children.push_back(vv);
-    //    printf("给v增加儿子\n");
-    //    printf("儿子的action %d,%d\n", action.x, action.y);
     return vv;
 }
 
 Node* UCTStrategy::bestChild(Node* v, double c) {
-    //    printf("bestChild\n");
     assert(v->children.size() > 0);
     
     Node* candid = nullptr;
     double max_confidnece = INT_MIN;
     for (int i = 0; i < v->children.size(); i++) {
         Node* child = v->children[i];
-        //        printf("遍历儿子 %d, %d\n", child->action.x, child->action.y);
         double a = static_cast<double>(child->reward)/child->visited;
         
-//        a = (v->mySide) ? a : -a;
+        if (v->mySide) a = -a;
         
         double b = 2*log(v->visited)/child->visited;
         double confidence = a + c*sqrt(b);
-        //        printf("a: %f, b:%f, confidence %f, coefficient %f\n", a, b, confidence, c);
-        if (confidence > max_confidnece || ( confidence==max_confidnece && rand()%2)) {
+        
+        if (confidence > max_confidnece || (confidence==max_confidnece && rand()%2)) {
             max_confidnece = confidence;
             candid = child;
         }
     }
-    //    printf("best儿子的action %d,%d\n", candid->action.x, candid->action.y);
     return candid;
 }
 
@@ -130,18 +122,13 @@ int UCTStrategy::defaultPolicy(Node* v) {
         int idx = rand()%availableActions.size();
         // 以等概率选择行动a in A(s)
         vv->action = availableActions[idx];
-        int** newState = performAction(vv->state, vv->action, (vv->mySide ? 2 : 1));
+        vv->state[vv->action.x][vv->action.y] = (vv->mySide ? 2 : 1);
         
-        for (int i = 0; i < M; i++) {
-            delete[] vv->state[i];
-        }
-        delete vv->state;
-        
-        vv->state = newState;
         vv->mySide = !vv->mySide;
         gs = getGameState(vv);
     }
-    //    printf("gs: %d\n", gs);
+    
+    delete vv;
     assert(gs != PLAYING);
     int reward = 0;
     switch (gs) {
@@ -158,11 +145,10 @@ int UCTStrategy::defaultPolicy(Node* v) {
 }
 
 void UCTStrategy::backup(Node* v, int delta) {
-    //    printf("backup %d,%d : %d\n", v->action.x, v->action.y, delta);
     while (v != nullptr) {
         v->visited += 1;
         v->reward += delta;
-        delta = -delta;
+//        delta = -delta;
         v = v->parent;
     }
 }
