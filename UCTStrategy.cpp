@@ -126,7 +126,8 @@ int UCTStrategy::defaultPolicy(Node* v) {
         updateActions(vv);
         int idx = rand()%vv->availableActCnt;
         // 以等概率选择行动a in A(s)
-        vv->action = vv->availableActions[idx];
+        auto y = vv->availableActions[idx];
+        vv->action = Point(vv->top[y], y);
         vv->state[vv->action.x][vv->action.y] = (vv->mySide ? 2 : 1);
         
         vv->mySide = !vv->mySide;
@@ -172,6 +173,9 @@ bool UCTStrategy::isNodeTerminal(Node* v) {
 }
 
 int** UCTStrategy::performAction(int** s0, Point action, int pawn) {
+    if (!(s0[action.x][action.y] == 0)) {
+        printBoard(s0);
+    }
     assert(s0[action.x][action.y] == 0);
     assert(!(noX == action.x && noY == action.y) );
     int** board = new int*[M];
@@ -209,6 +213,6 @@ void UCTStrategy::printBoard(int **board) {
 void UCTStrategy::updateActions(Node* v) {
     v->availableActCnt = 0;
     for (int y = 0; y < _N; y++) {
-        if (this->top[y] >= 0) v->availableActions[v->availableActCnt++] = y;
+        if (v->top[y] >= 0) v->availableActions[v->availableActCnt++] = y;
     }
 }
