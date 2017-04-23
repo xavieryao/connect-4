@@ -42,6 +42,21 @@ bool UCTStrategy::valid() const {
     return true;
 }
 
+Point UCTStrategy::getPointFor1DBoard(const int M, const int N, const int* top, int* board,
+               const int lastX, const int lastY, const int noX, const int noY) {
+    
+    int** board2d = new int*[M];
+    for (int i = 0; i < N; i++) {
+        board2d[i] = new int[N];
+        for (int j = 0; j < M; j++) {
+            board2d[i][j] = board[i * N + j];
+        }
+    }
+//    return Point(2,3);
+
+    return getPoint(M, N, top, board2d, lastX, lastY, noX, noY);
+}
+
 Point UCTStrategy::getPoint(const int m, const int n, const int* top,
                             int** board,const int lastX, const int lastY,
                             const int noX, const int noY) {
@@ -53,14 +68,13 @@ Point UCTStrategy::getPoint(const int m, const int n, const int* top,
 }
 
 Point UCTStrategy::uctSearch(int** s0, int lastX, int lastY, const int* top) {
-    //    printf("uctSearch Started\n");
+        printf("uctSearch Started\n");
     Time startTime = std::chrono::system_clock::now();
     
     Node* v0 = new Node(nullptr, s0, top, true, Point(lastX, lastY));
     // 以状态s0创建根节点v0
     
     int i = 0;
-    
     while (!hasTimeout(startTime)) {
         Node* vl = treePolicy(v0);
         int delta = defaultPolicy(vl);
@@ -68,7 +82,7 @@ Point UCTStrategy::uctSearch(int** s0, int lastX, int lastY, const int* top) {
         i ++;
     }
     
-//    printf("%d iterations\n", i);
+    printf("%d iterations\n", i);
     Point result = bestChild(v0, 0.0f)->action;
     for (auto child :v0->children) {
         delete child;
@@ -88,7 +102,7 @@ Node* UCTStrategy::treePolicy(Node* v) {
 }
 
 Node* UCTStrategy::expand(Node* v) {
-//    assert(v->availableActCnt > 0);
+    assert(v->availableActCnt > 0);
     
     int idx = rand()%v->availableActCnt;
     auto y = v->availableActions[idx];
@@ -157,7 +171,7 @@ int UCTStrategy::defaultPolicy(Node* v) {
     }
     
     delete vv;
-//    assert(gs != PLAYING);
+    assert(gs != PLAYING);
     int reward = 0;
     switch (gs) {
         case COMPUTER_WIN:

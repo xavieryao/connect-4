@@ -76,7 +76,6 @@ private:
     int noY;
     
     const int* top;
-    int timeout = 1700;
     float coefficient = 1.0f;
     
     enum GameState {
@@ -84,10 +83,15 @@ private:
     };
     
 public:
+    int timeout = 1700;
+
     UCTStrategy(int m, int n, int noX, int noY);
     UCTStrategy() : M(0), N(0), noX(-1), noY(-1) {};
     
     Point getPoint(const int M, const int N, const int* top, int** board,
+                   const int lastX, const int lastY, const int noX, const int noY);
+    
+    Point getPointFor1DBoard(const int M, const int N, const int* top, int* board,
                    const int lastX, const int lastY, const int noX, const int noY);
     
     bool valid() const;
