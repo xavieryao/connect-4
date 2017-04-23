@@ -76,7 +76,7 @@ private:
     int noY;
     
     const int* top;
-    int timeout = 1500;
+    int timeout = 1700;
     float coefficient = 1.0f;
     
     enum GameState {
