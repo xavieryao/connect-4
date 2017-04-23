@@ -164,7 +164,7 @@ void UCTStrategy::backup(Node* v, int delta) {
 
 bool UCTStrategy::hasTimeout(Time& start) {
     Time now = std::chrono::system_clock::now();
-    bool result = now - start > std::chrono::milliseconds(1300);
+    bool result = now - start > std::chrono::milliseconds(timeout);
     //if(result) printf("timeout!\n");
     return result;
 }

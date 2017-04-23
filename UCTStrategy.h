@@ -76,7 +76,7 @@ private:
     int noY;
     
     const int* top;
-    int timeout = 150000;
+    int timeout = 1500;
     double coefficient = 1.0;
     
     enum GameState {
@@ -93,6 +93,7 @@ public:
     bool valid() const;
     
 private:
+    
     Point uctSearch(int** s0, int lastX, int lastY, const int* top);
     Node* treePolicy(Node* v);
     Node* expand(Node* v);
