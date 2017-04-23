@@ -32,19 +32,28 @@ struct Node {
     int visited;
     Point action;
     bool mySide;
-    std::vector<Point> availableActions;
+    //    std::vector<int> availableActions;
+    int availableActions[12];
+    int availableActCnt;
+    int top[12];
     
-    Node(Node* parent, int** state, bool mySide = true, Point action = Point()) {
+    Node(Node* parent, int** state, const int* top, bool mySide = true, Point action = Point()) {
         this->parent = parent;
         this->state = state;
         this->reward = 0;
         this->visited = 1;
         this->mySide = mySide;
         this->action = action;
+        this->availableActCnt = 0;
+        for (int y = 0; y < _N; y++) {
+            if (this->top[y] >= 0) availableActions[availableActCnt++] = y;
+        }
+        memcpy(this->top, top, sizeof(int)*_N);
+        
     }
     
     ~Node() {
-
+        
         for (int i = 0; i<_M; i++) {
             delete[] state[i];
         }
@@ -82,7 +91,7 @@ public:
     bool valid() const;
     
 private:
-    Point uctSearch(int** s0, int lastX, int lastY);
+    Point uctSearch(int** s0, int lastX, int lastY, const int* top);
     Node* treePolicy(Node* v);
     Node* expand(Node* v);
     Node* bestChild(Node* v, double c);
@@ -90,7 +99,7 @@ private:
     void backup(Node* v, int delta);
     bool hasTimeout(Time& start);
     bool isNodeTerminal(Node* v);
-    std::vector<Point> actions(int** s);
+    void updateActions(Node* v);
     int** performAction(int** s0, Point action, int pawn);
     GameState getGameState(Node* v);
     void printBoard(int** board);

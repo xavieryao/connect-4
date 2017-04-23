@@ -30,26 +30,26 @@ Point UCTStrategy::getPoint(const int m, const int n, const int* top,
     this->N = n;
     this->noX = noX;
     this->noY = noY;
-    return uctSearch(board, lastX, lastY);
+    return uctSearch(board, lastX, lastY, top);
 }
 
-Point UCTStrategy::uctSearch(int** s0, int lastX, int lastY) {
+Point UCTStrategy::uctSearch(int** s0, int lastX, int lastY, const int* top) {
     //    printf("uctSearch Started\n");
     Time startTime = std::chrono::system_clock::now();
     
-    Node* v0 = new Node(nullptr, s0, true, Point(lastX, lastY));
-    v0->availableActions = actions(v0->state);
+    Node* v0 = new Node(nullptr, s0, top, true, Point(lastX, lastY));
     // 以状态s0创建根节点v0
     
     int i = 0;
     
     while (!hasTimeout(startTime)) {
-        //        printf("uctSearch iteration\n");
         Node* vl = treePolicy(v0);
         int delta = defaultPolicy(vl);
         backup(vl, delta);
         i ++;
     }
+    
+    printf("%d iterations\n", i);
     Point result = bestChild(v0, 0)->action;
     for (auto child :v0->children) {
         delete child;
@@ -59,7 +59,7 @@ Point UCTStrategy::uctSearch(int** s0, int lastX, int lastY) {
 
 Node* UCTStrategy::treePolicy(Node* v) {
     while (!isNodeTerminal(v)) { // while节点v不是终止节点
-        if (v->availableActions.size() > 0) { // if 节点v是可扩展的
+        if (v->availableActCnt > 0) { // if 节点v是可扩展的
             return expand(v);
         } else {
             v = bestChild(v, coefficient);
@@ -69,16 +69,21 @@ Node* UCTStrategy::treePolicy(Node* v) {
 }
 
 Node* UCTStrategy::expand(Node* v) {
-    assert(v->availableActions.size() > 0);
+    assert(v->availableActCnt > 0);
     
-    int idx = rand()%v->availableActions.size();
-    auto action = v->availableActions[idx];
-    v->availableActions[idx] = v->availableActions.back();
-    v->availableActions.pop_back(); // 随机选择尚未选择过的行动
+    int idx = rand()%v->availableActCnt;
+    auto y = v->availableActions[idx];
+    auto action = Point(v->top[y], y);
+    v->availableActions[idx] = v->availableActions[v->availableActCnt-1];
+    v->availableActCnt--; // 随机选择尚未选择过的行动
     
     auto newState = performAction(v->state, action, (v->mySide ? 2 : 1));
-    Node* vv = new Node(v, newState, !v->mySide, action); // 添加节点
-    vv->availableActions = actions(vv->state);
+    Node* vv = new Node(v, newState, v->top, !v->mySide, action); // 添加节点
+    // update top
+    vv->top[y] --;
+    if (y == noY && vv->top[y] == noX) vv->top[y] --;
+    
+    updateActions(vv);
     
     v->children.push_back(vv);
     return vv;
@@ -108,7 +113,7 @@ Node* UCTStrategy::bestChild(Node* v, double c) {
 
 int UCTStrategy::defaultPolicy(Node* v) {
     //        printf("defaultPolicy\n");
-    Node* vv = new Node(nullptr, v->state, v->mySide, v->action);
+    Node* vv = new Node(nullptr, v->state, v->top, v->mySide, v->action);
     int** vstate = new int*[M];
     for(int i = 0; i < M; i++) {
         vstate[i] = new int[N];
@@ -118,10 +123,10 @@ int UCTStrategy::defaultPolicy(Node* v) {
     
     UCTStrategy::GameState gs = getGameState(vv);
     while (gs == PLAYING) {
-        std::vector<Point> availableActions = actions(vv->state);
-        int idx = rand()%availableActions.size();
+        updateActions(vv);
+        int idx = rand()%vv->availableActCnt;
         // 以等概率选择行动a in A(s)
-        vv->action = availableActions[idx];
+        vv->action = vv->availableActions[idx];
         vv->state[vv->action.x][vv->action.y] = (vv->mySide ? 2 : 1);
         
         vv->mySide = !vv->mySide;
@@ -148,7 +153,7 @@ void UCTStrategy::backup(Node* v, int delta) {
     while (v != nullptr) {
         v->visited += 1;
         v->reward += delta;
-//        delta = -delta;
+        //        delta = -delta;
         v = v->parent;
     }
 }
@@ -164,28 +169,6 @@ bool UCTStrategy::isNodeTerminal(Node* v) {
     GameState state = getGameState(v);
     //    printf("is node terminal? %d\n", state);
     return state != PLAYING;
-}
-
-std::vector<Point> UCTStrategy::actions(int** s) {
-    std::vector<Point> acts;
-    for (int y = 0; y < N; y++) {
-        Point p;
-        p.y = y;
-        p.x = M-1;
-        for (int x = 0; x < M; x++) {
-            if (s[x][y] != 0) {
-                p.x = x-1;
-                break;
-            }
-        }
-        if (p.y == noY && p.x == noX) {
-            p.x -= 1;
-        }
-        if (p.x >= 0 && p.x < M && p.y >= 0 & p.y < N) {
-            acts.push_back(p);
-        }
-    }
-    return acts;
 }
 
 int** UCTStrategy::performAction(int** s0, Point action, int pawn) {
@@ -208,12 +191,11 @@ UCTStrategy::GameState UCTStrategy::getGameState(Node* v) {
         return gs;
     }
     
-    bool tie = actions(v->state).size() == 0;
+    bool tie = v->availableActCnt == 0;
     if (tie) return TIE;
     
     return PLAYING;
 }
-
 
 void UCTStrategy::printBoard(int **board) {
     for (int x= 0 ; x < M; x++) {
@@ -221,5 +203,12 @@ void UCTStrategy::printBoard(int **board) {
             printf("%d", board[x][y]);
         }
         printf("\n");
+    }
+}
+
+void UCTStrategy::updateActions(Node* v) {
+    v->availableActCnt = 0;
+    for (int y = 0; y < _N; y++) {
+        if (this->top[y] >= 0) v->availableActions[v->availableActCnt++] = y;
     }
 }
