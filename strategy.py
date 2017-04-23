@@ -255,6 +255,32 @@ class UCTStrategy(_object):
 UCTStrategy_swigregister = _strategy.UCTStrategy_swigregister
 UCTStrategy_swigregister(UCTStrategy)
 
+class Point(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, Point, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, Point, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["x"] = _strategy.Point_x_set
+    __swig_getmethods__["x"] = _strategy.Point_x_get
+    if _newclass:
+        x = _swig_property(_strategy.Point_x_get, _strategy.Point_x_set)
+    __swig_setmethods__["y"] = _strategy.Point_y_set
+    __swig_getmethods__["y"] = _strategy.Point_y_get
+    if _newclass:
+        y = _swig_property(_strategy.Point_y_get, _strategy.Point_y_set)
+
+    def __init__(self, x=0, y=0):
+        this = _strategy.new_Point(x, y)
+        try:
+            self.this.append(this)
+        except __builtin__.Exception:
+            self.this = this
+    __swig_destroy__ = _strategy.delete_Point
+    __del__ = lambda self: None
+Point_swigregister = _strategy.Point_swigregister
+Point_swigregister(Point)
+
 # This file is compatible with both classic and new-style classes.
 
 

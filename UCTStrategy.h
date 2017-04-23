@@ -48,9 +48,14 @@ struct Node {
         
         memcpy(this->top, top, sizeof(int)*_N);
         
+        printf("_N: %d\n", _N);
+        
         for (int y = 0; y < _N; y++) {
+            printf("top[%d]=%d\n", y, this->top[y]);
             if (this->top[y] >= 0) availableActions[availableActCnt++] = y;
         }
+        
+        printf("new node, availableActions: %d\n", availableActCnt);
         
     }
     
