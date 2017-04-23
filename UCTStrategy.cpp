@@ -68,7 +68,7 @@ Point UCTStrategy::uctSearch(int** s0, int lastX, int lastY, const int* top) {
         i ++;
     }
     
-    printf("%d iterations\n", i);
+//    printf("%d iterations\n", i);
     Point result = bestChild(v0, 0.0f)->action;
     for (auto child :v0->children) {
         delete child;
@@ -88,7 +88,7 @@ Node* UCTStrategy::treePolicy(Node* v) {
 }
 
 Node* UCTStrategy::expand(Node* v) {
-    assert(v->availableActCnt > 0);
+//    assert(v->availableActCnt > 0);
     
     int idx = rand()%v->availableActCnt;
     auto y = v->availableActions[idx];
@@ -157,7 +157,7 @@ int UCTStrategy::defaultPolicy(Node* v) {
     }
     
     delete vv;
-    assert(gs != PLAYING);
+//    assert(gs != PLAYING);
     int reward = 0;
     switch (gs) {
         case COMPUTER_WIN:
@@ -195,9 +195,6 @@ bool UCTStrategy::isNodeTerminal(Node* v) {
 }
 
 int** UCTStrategy::performAction(int** s0, Point action, int pawn) {
-    if (!(s0[action.x][action.y] == 0)) {
-        printBoard(s0);
-    }
     assert(s0[action.x][action.y] == 0);
     assert(!(noX == action.x && noY == action.y) );
     int** board = new int*[M];
