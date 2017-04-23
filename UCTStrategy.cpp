@@ -43,7 +43,7 @@ Point UCTStrategy::uctSearch(int** s0, int lastX, int lastY) {
     
     int i = 0;
     
-    while (i <= 6000) {
+    while (!hasTimeout(startTime)) {
         //        printf("uctSearch iteration\n");
         Node* vl = treePolicy(v0);
         int delta = defaultPolicy(vl);
@@ -155,7 +155,7 @@ void UCTStrategy::backup(Node* v, int delta) {
 
 bool UCTStrategy::hasTimeout(Time& start) {
     Time now = std::chrono::system_clock::now();
-    bool result = (std::chrono::duration_cast<std::chrono::microseconds>(now - start).count() > timeout);
+    bool result = now - start > std::chrono::milliseconds(1300);
     //if(result) printf("timeout!\n");
     return result;
 }
@@ -190,7 +190,7 @@ std::vector<Point> UCTStrategy::actions(int** s) {
 
 int** UCTStrategy::performAction(int** s0, Point action, int pawn) {
     assert(s0[action.x][action.y] == 0);
-    assert(!(noX == action.x && noY == action.y && pawn==2) );
+    assert(!(noX == action.x && noY == action.y) );
     int** board = new int*[M];
     for(int i = 0; i < M; i++) {
         board[i] = new int[N];
