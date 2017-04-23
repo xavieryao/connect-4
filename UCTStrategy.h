@@ -28,7 +28,7 @@ struct Node {
     Node* parent;
     std::vector<Node*> children;
     int** state;
-    double reward;
+    float reward;
     int visited;
     Point action;
     bool mySide;
@@ -77,7 +77,7 @@ private:
     
     const int* top;
     int timeout = 1500;
-    double coefficient = 1.0;
+    float coefficient = 1.0f;
     
     enum GameState {
         COMPUTER_WIN, USER_WIN, TIE, PLAYING
@@ -97,7 +97,7 @@ private:
     Point uctSearch(int** s0, int lastX, int lastY, const int* top);
     Node* treePolicy(Node* v);
     Node* expand(Node* v);
-    Node* bestChild(Node* v, double c);
+    Node* bestChild(Node* v, float c);
     int defaultPolicy(Node* v);
     void backup(Node* v, int delta);
     bool hasTimeout(Time& start);

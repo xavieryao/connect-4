@@ -9,6 +9,25 @@
 #include "UCTStrategy.h"
 #include <iostream>
 
+inline float fast_log2 (float val)
+{
+    int * const    exp_ptr = reinterpret_cast <int *> (&val);
+    int            x = *exp_ptr;
+    const int      log_2 = ((x >> 23) & 255) - 128;
+    x &= ~(255 << 23);
+    x += 127 << 23;
+    *exp_ptr = x;
+    
+    val = ((-1.0f/3) * val + 2) * val - 2.0f/3;   // (1)
+    
+    return (val + log_2);
+}
+
+inline float fast_log (const float &val)
+{
+    return (fast_log2 (val) * 0.69314718f);
+}
+
 UCTStrategy::UCTStrategy(int m, int n, int noX, int noY) {
     this->M = m;
     this->N = n;
@@ -50,7 +69,7 @@ Point UCTStrategy::uctSearch(int** s0, int lastX, int lastY, const int* top) {
     }
     
     printf("%d iterations\n", i);
-    Point result = bestChild(v0, 0)->action;
+    Point result = bestChild(v0, 0.0f)->action;
     for (auto child :v0->children) {
         delete child;
     }
@@ -89,19 +108,19 @@ Node* UCTStrategy::expand(Node* v) {
     return vv;
 }
 
-Node* UCTStrategy::bestChild(Node* v, double c) {
+Node* UCTStrategy::bestChild(Node* v, float c) {
     assert(v->children.size() > 0);
     
     Node* candid = nullptr;
-    double max_confidnece = INT_MIN;
+    float max_confidnece = INT_MIN;
     for (int i = 0; i < v->children.size(); i++) {
         Node* child = v->children[i];
-        double a = static_cast<double>(child->reward)/child->visited;
+        float a = child->reward/child->visited;
         
         if (v->mySide) a = -a;
         
-        double b = 2*log(v->visited)/child->visited;
-        double confidence = a + c*sqrt(b);
+        float b = 2*fast_log2(v->visited)/child->visited;
+        float confidence = a + c*sqrt(b);
         
         if (confidence > max_confidnece || (confidence==max_confidnece && rand()%2)) {
             max_confidnece = confidence;
@@ -132,7 +151,7 @@ int UCTStrategy::defaultPolicy(Node* v) {
         vv->top[y]--;
         if (vv->top[y] == noX && y == noY) vv->top[y]--;
         vv->mySide = !vv->mySide;
-//        printBoard(vv->state);
+        //        printBoard(vv->state);
         updateActions(vv);
         gs = getGameState(vv);
     }
@@ -192,13 +211,10 @@ int** UCTStrategy::performAction(int** s0, Point action, int pawn) {
 
 UCTStrategy::GameState UCTStrategy::getGameState(Node* v) {
     if (v->action.x == -1) return PLAYING;
-    if(machineWin(v->action.x, v->action.y, M, N, v->state) || userWin(v->action.x, v->action.y, M, N, v->state)) {
-        //        printBoard(v->state);
-        GameState gs = (v->mySide ? USER_WIN : COMPUTER_WIN);
-        return gs;
-    }
+    if (v->mySide && userWin(v->action.x, v->action.y, M, N, v->state)) return USER_WIN;
+    if (!v->mySide && machineWin(v->action.x, v->action.y, M, N, v->state)) return COMPUTER_WIN;
     
-//    updateActions(v);
+    //    updateActions(v);
     bool tie = (actionCount(v) == 0);
     if (tie) {
         return TIE;
