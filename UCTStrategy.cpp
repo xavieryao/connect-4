@@ -129,8 +129,11 @@ int UCTStrategy::defaultPolicy(Node* v) {
         auto y = vv->availableActions[idx];
         vv->action = Point(vv->top[y], y);
         vv->state[vv->action.x][vv->action.y] = (vv->mySide ? 2 : 1);
-        
+        vv->top[y]--;
+        if (vv->top[y] == noX && y == noY) vv->top[y]--;
         vv->mySide = !vv->mySide;
+//        printBoard(vv->state);
+        updateActions(vv);
         gs = getGameState(vv);
     }
     
@@ -195,8 +198,11 @@ UCTStrategy::GameState UCTStrategy::getGameState(Node* v) {
         return gs;
     }
     
-    bool tie = v->availableActCnt == 0;
-    if (tie) return TIE;
+//    updateActions(v);
+    bool tie = (actionCount(v) == 0);
+    if (tie) {
+        return TIE;
+    }
     
     return PLAYING;
 }
@@ -215,4 +221,12 @@ void UCTStrategy::updateActions(Node* v) {
     for (int y = 0; y < _N; y++) {
         if (v->top[y] >= 0) v->availableActions[v->availableActCnt++] = y;
     }
+}
+
+int UCTStrategy::actionCount(Node* v) {
+    int availableActCnt = 0;
+    for (int y = 0; y < _N; y++) {
+        if (v->top[y] >= 0) availableActCnt++;
+    }
+    return availableActCnt;
 }

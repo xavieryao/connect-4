@@ -45,10 +45,12 @@ struct Node {
         this->mySide = mySide;
         this->action = action;
         this->availableActCnt = 0;
+        
+        memcpy(this->top, top, sizeof(int)*_N);
+        
         for (int y = 0; y < _N; y++) {
             if (this->top[y] >= 0) availableActions[availableActCnt++] = y;
         }
-        memcpy(this->top, top, sizeof(int)*_N);
         
     }
     
@@ -103,6 +105,7 @@ private:
     int** performAction(int** s0, Point action, int pawn);
     GameState getGameState(Node* v);
     void printBoard(int** board);
+    int actionCount(Node* v);
 };
 
 #endif /* UCTStrategy_h */
